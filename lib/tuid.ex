@@ -1,18 +1,13 @@
-defmodule Tuid do
+defmodule TUID do
   @moduledoc """
-  Documentation for `Tuid`.
-  """
+  Documentation for `TUID`.
 
-  @doc """
-  Hello world.
+    Generates prefixed base58 encoded UUIDv7.
 
-  ## Examples
+  credit to blog post:
 
-      iex> Tuid.hello()
-      :world
+  https://danschultzer.com/posts/prefixed-base62-uuidv7-object-ids-with-ecto
+
 
   """
-  def hello do
-    :world
-  end
 end
