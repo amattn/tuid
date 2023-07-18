@@ -29,6 +29,7 @@ defmodule TuidTest do
   @loader nil
   @dumper nil
 
+  @test_invalid_type -1
   @test_prefixed_uuid "test_RrfF33bpyVHPZqvvBLo2Ac"
   @test_uuid UUID.to_string("c94a570c-5126-4391-a176-54750d54b2b1", :raw)
   @test_prefixed_uuid_with_leading_zero "test_1RYjzh3Emc87ejqSXyFcE"
@@ -41,6 +42,8 @@ defmodule TuidTest do
   @test_uuid_invalid_format String.duplicate("x", 21)
 
   test "cast/2" do
+    assert TUID.ParameterizedType.cast(@test_invalid_type, @params) == :error
+
     assert TUID.ParameterizedType.cast(@test_prefixed_uuid, @params) == {:ok, @test_prefixed_uuid}
 
     assert TUID.ParameterizedType.cast(@test_prefixed_uuid_with_leading_zero, @params) ==

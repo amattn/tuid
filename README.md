@@ -31,7 +31,7 @@ def deps do
 end
 ```
 
-Add the following code to a single schema module to use TUID columns like so:
+Add the following code to a single schema module to use TUID as primary keys like so:
 
 ```elixir
 
@@ -48,7 +48,7 @@ Migrations should look like the following:
 ```elixir
 
   create table(:books, primary_key: false) do
-    add :id, :uuid, primary_key: true
+    add :id, :uuid, primary_key: true, null: false
     add :title, :string
     add :author, :string
   end
@@ -60,7 +60,7 @@ Typically, the `MyApp.Schema` is saved to `lib/my_app/schema.ex`
 ```elixir
 defmodule MyApp.Schema do
   @moduledoc """
-  This module defines the default schema settings for schema modules
+  This module defines the custom schema settings for schema modules
   in MyApp.
 
   Primary and foreign keys use TUIDs.
@@ -89,7 +89,7 @@ defmodule MyApp.Schema do
 end
 ```
 
-Schema modules then should look like:
+Schema modules then use `MyApp.Schem` instead of `Ecto.Schema` like so:
 
 ```elixir
 
@@ -106,6 +106,27 @@ defmodule MyApp.Library.Book do
   ...
      
 end
+```
+
+Foreign key impelmentions are fairly straightforward.  You have to let ecto migration know 
+that the fkeys are really UUIDs in the database migrations.  You do this by setting  
+`:type` to `:binary_id`.  
+
+Assuming both users and books use TUID.ParamterizedType for primary keys, a hypothetical 
+intermediate table may look like so:
+
+```elixir
+
+  ...
+
+  create table(:favorites) do
+      add :user_id, references(:users, on_delete: :nothing, type: :binary_id), null: false
+      add :book_id, references(:books, on_delete: :nothing, type: :binary_id), null: false
+  end
+
+
+  ...     
+
 ```
 
 ## Credit and inspiration

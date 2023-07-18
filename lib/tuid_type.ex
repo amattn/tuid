@@ -77,13 +77,17 @@ defmodule TUID.ParameterizedType do
     end
   end
 
-  defp slug_to_uuid(string, _params) do
+  defp slug_to_uuid(string, _params) when is_binary(string) do
     with [prefix, slug] <- String.split(string, "_"),
          {:ok, uuid} <- Base58.decode_uuid(slug) do
       {:ok, prefix, uuid}
     else
       _ -> :error
     end
+  end
+
+  defp slug_to_uuid(_, _params) do
+    :error
   end
 
   defp prefix(%{primary_key: true, prefix: prefix}), do: prefix
