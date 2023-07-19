@@ -197,4 +197,8 @@ defmodule TUID.ParameterizedType do
   """
   @impl true
   def equal?(a, b, params), do: Uniq.UUID.equal?(a, b, params.uniq)
+
+  def equal?(a, b) do
+    Uniq.UUID.equal?(a, b, nil)
+  end
 end
