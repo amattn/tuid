@@ -42,7 +42,8 @@ defmodule TuidTest do
   @test_uuid_invalid_format String.duplicate("x", 21)
 
   test "cast/2" do
-    assert TUID.ParameterizedType.cast(@test_invalid_type, @params) == :error
+    assert TUID.ParameterizedType.cast(@test_invalid_type, @params) ==
+             {:error, "invalid tuid or tag: unknown tuid or unexpected tuid type: -1"}
 
     assert TUID.ParameterizedType.cast(@test_prefixed_uuid, @params) == {:ok, @test_prefixed_uuid}
 
@@ -53,11 +54,48 @@ defmodule TuidTest do
              {:ok, @test_prefixed_uuid_null}
 
     assert TUID.ParameterizedType.cast(nil, @params) == {:ok, nil}
-    assert TUID.ParameterizedType.cast("otherprefix" <> @test_prefixed_uuid, @params) == :error
-    assert TUID.ParameterizedType.cast(@test_prefixed_uuid_invalid_characters, @params) == :error
-    assert TUID.ParameterizedType.cast(@test_prefixed_uuid_invalid_format, @params) == :error
+
+    assert TUID.ParameterizedType.cast("otherprefix" <> @test_prefixed_uuid, @params) ==
+             {:error, "invalid tuid or tag: otherprefixtest_RrfF33bpyVHPZqvvBLo2Ac"}
+
+    assert TUID.ParameterizedType.cast(@test_prefixed_uuid_invalid_characters, @params) ==
+             {:error,
+              "invalid tuid or tag: failed to parse tuid: test_................................"}
+
+    assert TUID.ParameterizedType.cast(@test_prefixed_uuid_invalid_format, @params) ==
+             {:error,
+              "invalid tuid or tag: failed to parse tuid: test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"}
 
     assert TUID.ParameterizedType.cast(@test_prefixed_uuid, @belongs_to_params) ==
+             {:ok, @test_prefixed_uuid}
+  end
+
+  test "cast/1" do
+    assert TUID.ParameterizedType.cast(@test_invalid_type) ==
+             {:error, "invalid tuid or tag: unknown tuid or unexpected tuid type: -1"}
+
+    assert TUID.ParameterizedType.cast(@test_prefixed_uuid) == {:ok, @test_prefixed_uuid}
+
+    assert TUID.ParameterizedType.cast(@test_prefixed_uuid_with_leading_zero) ==
+             {:ok, @test_prefixed_uuid_with_leading_zero}
+
+    assert TUID.ParameterizedType.cast(@test_prefixed_uuid_null) ==
+             {:ok, @test_prefixed_uuid_null}
+
+    assert TUID.ParameterizedType.cast(nil) == {:ok, nil}
+
+    assert TUID.ParameterizedType.cast("otherprefix" <> @test_prefixed_uuid) ==
+             {:ok, "otherprefixtest_RrfF33bpyVHPZqvvBLo2Ac"}
+
+    assert TUID.ParameterizedType.cast(@test_prefixed_uuid_invalid_characters) ==
+             {:error,
+              "invalid tuid or tag: failed to parse tuid: test_................................"}
+
+    assert TUID.ParameterizedType.cast(@test_prefixed_uuid_invalid_format) ==
+             {:error,
+              "invalid tuid or tag: failed to parse tuid: test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"}
+
+    assert TUID.ParameterizedType.cast(@test_prefixed_uuid) ==
              {:ok, @test_prefixed_uuid}
   end
 
@@ -70,9 +108,15 @@ defmodule TuidTest do
     assert TUID.ParameterizedType.load(@test_uuid_null, @loader, @params) ==
              {:ok, @test_prefixed_uuid_null}
 
-    assert TUID.ParameterizedType.load(@test_uuid_invalid_characters, @loader, @params) == :error
-    assert TUID.ParameterizedType.load(@test_uuid_invalid_format, @loader, @params) == :error
-    assert TUID.ParameterizedType.load(@test_prefixed_uuid, @loader, @params) == :error
+    assert TUID.ParameterizedType.load(@test_uuid_invalid_characters, @loader, @params) ==
+             {:error, "load error: ......................"}
+
+    assert TUID.ParameterizedType.load(@test_uuid_invalid_format, @loader, @params) ==
+             {:error, "load error: xxxxxxxxxxxxxxxxxxxxx"}
+
+    assert TUID.ParameterizedType.load(@test_prefixed_uuid, @loader, @params) ==
+             {:error, "load error: test_RrfF33bpyVHPZqvvBLo2Ac"}
+
     assert TUID.ParameterizedType.load(nil, @loader, @params) == {:ok, nil}
 
     assert TUID.ParameterizedType.load(@test_uuid, @loader, @belongs_to_params) ==
@@ -88,7 +132,9 @@ defmodule TuidTest do
     assert TUID.ParameterizedType.dump(@test_prefixed_uuid_null, @dumper, @params) ==
              {:ok, @test_uuid_null}
 
-    assert TUID.ParameterizedType.dump(@test_uuid, @dumper, @params) == :error
+    assert TUID.ParameterizedType.dump(@test_uuid, @dumper, @params) ==
+             {:error, "dump error: failed to parse tuid: \xC9JW\fQ&C\x91\xA1vTu\rT\xB2\xB1"}
+
     assert TUID.ParameterizedType.dump(nil, @dumper, @params) == {:ok, nil}
 
     assert TUID.ParameterizedType.dump(@test_prefixed_uuid, @dumper, @belongs_to_params) ==

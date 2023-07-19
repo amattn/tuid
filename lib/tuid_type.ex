@@ -10,6 +10,8 @@ defmodule TUID.ParameterizedType do
 
   alias TUID.Base58
 
+  require Logger
+
   @doc """
   Callback to convert the options specified in the field macro into parameters
   to be used in other callbacks.
@@ -61,33 +63,39 @@ defmodule TUID.ParameterizedType do
   @doc """
   Casts the given input to the ParameterizedType with the given parameters.
 
-  Specifically, convert a TUID, such as `user_C19xa4ANGXSz72USEyc2m` to a binary UUID for storage into the DB.
+  Specifically, convert and validate a TUID, such as `user_C19xa4ANGXSz72USEyc2m` to a binary UUID for storage into the DB.
+
+  On successful validation, returns `{:ok, input}`.
+
+  Otherwise returns `:error` or `{:error, err_msg}`
 
   For more information on casting, see `c:Ecto.Type.cast/1`.
   """
+
   @impl true
   def cast(nil, _params), do: {:ok, nil}
 
   def cast(data, params) do
-    with {:ok, prefix, _uuid} <- slug_to_uuid(data, params),
+    with {:ok, prefix, _uuid} <- tuid_to_uuid(data, params),
          {prefix, prefix} <- {prefix, prefix(params)} do
       {:ok, data}
     else
-      _ -> :error
+      {:error, err_msg} -> {:error, "invalid tuid or tag: #{err_msg}"}
+      _ -> {:error, "invalid tuid or tag: #{data}"}
     end
   end
 
-  defp slug_to_uuid(string, _params) when is_binary(string) do
-    with [prefix, slug] <- String.split(string, "_"),
-         {:ok, uuid} <- Base58.decode_uuid(slug) do
+  defp tuid_to_uuid(tuid, _params) when is_binary(tuid) do
+    with [prefix, b58_str] <- String.split(tuid, "_"),
+         {:ok, uuid} <- Base58.decode_uuid(b58_str) do
       {:ok, prefix, uuid}
     else
-      _ -> :error
+      _ -> {:error, "failed to parse tuid: #{tuid}"}
     end
   end
 
-  defp slug_to_uuid(_, _params) do
-    :error
+  defp tuid_to_uuid(tuid, _params) do
+    {:error, "unknown tuid or unexpected tuid type: #{tuid}"}
   end
 
   defp prefix(%{primary_key: true, prefix: prefix}), do: prefix
@@ -99,6 +107,20 @@ defmodule TUID.ParameterizedType do
     {:parameterized, __MODULE__, %{prefix: prefix}} = schema.__schema__(:type, field)
 
     prefix
+  end
+
+  @doc """
+  This is a fallback method to cast when we don't know the prefix type.
+  """
+  def cast(nil), do: {:ok, nil}
+
+  def cast(data) do
+    with {:ok, _prefix, _uuid} <- tuid_to_uuid(data, nil) do
+      {:ok, data}
+    else
+      {:error, err_msg} -> {:error, "invalid tuid or tag: #{err_msg}"}
+      _ -> {:error, "invalid tuid or tag: #{data}"}
+    end
   end
 
   @doc """
@@ -118,7 +140,7 @@ defmodule TUID.ParameterizedType do
     case Uniq.UUID.load(data, loader, params.uniq) do
       {:ok, nil} -> {:ok, nil}
       {:ok, uuid} -> {:ok, uuid_to_slug(uuid, params)}
-      :error -> :error
+      :error -> {:error, "load error: #{data}"}
     end
   end
 
@@ -142,8 +164,9 @@ defmodule TUID.ParameterizedType do
   def dump(nil, _, _), do: {:ok, nil}
 
   def dump(slug, dumper, params) do
-    case slug_to_uuid(slug, params) do
+    case tuid_to_uuid(slug, params) do
       {:ok, _prefix, uuid} -> Uniq.UUID.dump(uuid, dumper, params.uniq)
+      {:error, err_msg} -> {:error, "dump error: #{err_msg}"}
       :error -> :error
     end
   end
