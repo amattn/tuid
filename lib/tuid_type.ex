@@ -191,14 +191,18 @@ defmodule TUID.ParameterizedType do
   def embed_as(format, params), do: Uniq.UUID.embed_as(format, params.uniq)
 
   @doc """
-  Returns the underlying schema type for the ParameterizedType.
-
-  For more information on schema types, see `c:Ecto.Type.type/0`
+   Checks if two terms are semantically equal.
   """
   @impl true
-  def equal?(a, b, params), do: Uniq.UUID.equal?(a, b, params.uniq)
+  def equal?(a, b, _params) do
+    equal?(a, b)
+  end
 
-  def equal?(a, b) do
-    Uniq.UUID.equal?(a, b, nil)
+  def equal?(a, b) when is_binary(a) and is_binary(b) do
+    a == b
+  end
+
+  def equal?(_, _) do
+    false
   end
 end
