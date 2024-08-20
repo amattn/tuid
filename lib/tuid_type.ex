@@ -104,7 +104,7 @@ defmodule TUID.ParameterizedType do
   # the associations schema module
   defp prefix(%{schema: schema, field: field}) do
     %{related: schema, related_key: field} = schema.__schema__(:association, field)
-    {:parameterized, __MODULE__, %{prefix: prefix}} = schema.__schema__(:type, field)
+    {:parameterized, {__MODULE__, %{prefix: prefix}}} = schema.__schema__(:type, field)
 
     prefix
   end

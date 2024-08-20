@@ -4,7 +4,7 @@ defmodule Tuid.MixProject do
   def project do
     [
       app: :tuid,
-      version: "0.1.1",
+      version: "0.2.0",
       elixir: "~> 1.13",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -25,9 +25,9 @@ defmodule Tuid.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:ecto, "~> 3.0"},
+      {:ecto, "~> 3.12"},
       {:uniq, "~> 0.6"},
-      {:ex_doc, "~> 0.30", only: :dev, runtime: false}
+      {:ex_doc, "~> 0.34", only: :dev, runtime: false}
     ]
   end
 
